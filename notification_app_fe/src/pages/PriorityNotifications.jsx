@@ -1,26 +1,40 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NotificationList from "../components/NotificationList";
-import { notifications } from "../services/notificationService";
+import { getNotifications } from "../services/notificationService";
 import { Log } from "../utils/logger";
 
 function PriorityNotifications() {
 
+  const [notifications,
+    setNotifications] =
+      useState([]);
+
   useEffect(() => {
+
+    loadPriorityNotifications();
 
     Log(
       "frontend",
       "info",
       "page",
-      "Priority page loaded"
+      "Priority Notifications Loaded"
     );
 
   }, []);
 
-  const priorityNotifications =
-    notifications.filter(
-      item => item.type === "Placement"
-    );
+  const loadPriorityNotifications =
+    async () => {
+
+      const data =
+        await getNotifications(
+          1,
+          10,
+          "Placement"
+        );
+
+      setNotifications(data);
+    };
 
   return (
     <div>
@@ -34,7 +48,7 @@ function PriorityNotifications() {
       </Link>
 
       <NotificationList
-        data={priorityNotifications}
+        data={notifications}
       />
 
     </div>

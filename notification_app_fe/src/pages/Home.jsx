@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NotificationList from "../components/NotificationList";
-import { notifications } from "../services/notificationService";
+import { getNotifications } from "../services/notificationService";
 import { Log } from "../utils/logger";
 
 function Home() {
 
-  const [filter, setFilter] = useState("All");
+  const [notifications, setNotifications] =
+    useState([]);
+
+  const [page, setPage] =
+    useState(1);
+
+  const [filter, setFilter] =
+    useState("All");
 
   useEffect(() => {
 
@@ -17,14 +24,86 @@ function Home() {
       "Home page loaded"
     );
 
-  }, []);
+    loadNotifications();
 
-  const filteredNotifications =
-    filter === "All"
-      ? notifications
-      : notifications.filter(
-          item => item.type === filter
+  }, [page, filter]);
+
+  const loadNotifications =
+    async () => {
+
+      try {
+
+        Log(
+          "frontend",
+          "info",
+          "api",
+          `Fetching notifications page=${page} filter=${filter}`
         );
+
+        const data =
+          await getNotifications(
+            page,
+            10,
+            filter
+          );
+
+        setNotifications(data);
+
+        Log(
+          "frontend",
+          "info",
+          "state",
+          `Loaded ${data.length} notifications`
+        );
+
+      } catch (error) {
+
+        Log(
+          "frontend",
+          "error",
+          "api",
+          error.message
+        );
+
+      }
+    };
+
+  const handleFilterChange =
+    (type) => {
+
+      Log(
+        "frontend",
+        "info",
+        "component",
+        `Filter changed to ${type}`
+      );
+
+      setFilter(type);
+    };
+
+  const nextPage = () => {
+
+    Log(
+      "frontend",
+      "info",
+      "component",
+      `Moved to page ${page + 1}`
+    );
+
+    setPage(page + 1);
+  };
+
+  const previousPage = () => {
+
+    Log(
+      "frontend",
+      "info",
+      "component",
+      `Moved to page ${page - 1}`
+    );
+
+    setPage(page - 1);
+  };
 
   return (
     <div>
@@ -41,25 +120,33 @@ function Home() {
       <br />
 
       <button
-        onClick={() => setFilter("All")}
+        onClick={() =>
+          handleFilterChange("All")
+        }
       >
         All
       </button>
 
       <button
-        onClick={() => setFilter("Placement")}
+        onClick={() =>
+          handleFilterChange("Placement")
+        }
       >
         Placement
       </button>
 
       <button
-        onClick={() => setFilter("Result")}
+        onClick={() =>
+          handleFilterChange("Result")
+        }
       >
         Result
       </button>
 
       <button
-        onClick={() => setFilter("Event")}
+        onClick={() =>
+          handleFilterChange("Event")
+        }
       >
         Event
       </button>
@@ -68,8 +155,27 @@ function Home() {
       <br />
 
       <NotificationList
-        data={filteredNotifications}
+        data={notifications}
       />
+
+      <br />
+
+      <button
+        onClick={previousPage}
+        disabled={page === 1}
+      >
+        Previous
+      </button>
+
+      <span>
+        {" "}Page {page}{" "}
+      </span>
+
+      <button
+        onClick={nextPage}
+      >
+        Next
+      </button>
 
     </div>
   );
